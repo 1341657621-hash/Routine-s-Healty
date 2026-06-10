@@ -230,6 +230,27 @@ def make_records() -> list[dict]:
         row("2025-08-19", "肝酶学组合", "GGT", "111", "U/L", "2-50", "偏高", "肝功能", "PDF文字抽取"),
         row("2025-08-19", "肝酶学组合", "LAP", "98", "U/L", "30-70", "偏高", "肝功能", "PDF文字抽取"),
         row("2025-08-19", "肝酶学组合", "GLDH", "13.2", "U/L", "0.1-7.5", "偏高", "肝功能", "PDF文字抽取"),
+        row("2026-06-10", "尿沉渣定量检测,尿干化学检测", "红细胞(图像)", "3", "个/uL", "<10", category="尿检/肾脏", source="最新截图录入"),
+        row("2026-06-10", "尿沉渣定量检测,尿干化学检测", "白细胞(图像)", "105", "个/uL", "≤12", "偏高", "尿检/肾脏", "最新截图录入"),
+        row("2026-06-10", "尿沉渣定量检测,尿干化学检测", "鳞状上皮细胞(图像)", "9", "个/uL", "≤5", "偏高", "尿检/肾脏", "最新截图录入"),
+        row("2026-06-10", "尿沉渣定量检测,尿干化学检测", "非鳞状上皮细胞(图像)", "3", "个/uL", "≤2", "偏高", "尿检/肾脏", "最新截图录入"),
+        row("2026-06-10", "尿沉渣定量检测,尿干化学检测", "透明管型(图像)", "0", "个/uL", "≤2", category="尿检/肾脏", source="最新截图录入"),
+        row("2026-06-10", "尿沉渣定量检测,尿干化学检测", "病理管型(图像)", "0.0", "个/uL", "≤1.5", category="尿检/肾脏", source="最新截图录入"),
+        row("2026-06-10", "尿沉渣定量检测,尿干化学检测", "结晶(图像)", "0", "个/uL", "≤6", category="尿检/肾脏", source="最新截图录入"),
+        row("2026-06-10", "尿沉渣定量检测,尿干化学检测", "细菌(图像)", "319", "个/uL", "≤130", "偏高", "尿检/肾脏", "最新截图录入"),
+        row("2026-06-10", "尿沉渣定量检测,尿干化学检测", "黏液丝(图像)", "719", "个/uL", "≤264", "偏高", "尿检/肾脏", "最新截图录入"),
+        row("2026-06-10", "尿沉渣定量检测,尿干化学检测", "颜色", "黄色", "", "", "正常", "尿检/肾脏", "最新截图录入"),
+        row("2026-06-10", "尿沉渣定量检测,尿干化学检测", "浊度", "清晰", "", "", "正常", "尿检/肾脏", "最新截图录入"),
+        row("2026-06-10", "尿沉渣定量检测,尿干化学检测", "pH(干化学)", "5.0", "", "4.5-8.0", category="尿检/肾脏", source="最新截图录入"),
+        row("2026-06-10", "尿沉渣定量检测,尿干化学检测", "比重(干化学)", "1.027", "", "1.003-1.030", category="尿检/肾脏", source="最新截图录入"),
+        row("2026-06-10", "尿沉渣定量检测,尿干化学检测", "尿粒细胞酯酶(干化学)", "阳性(2+)", "", "阴性(-)", "异常", "尿检/肾脏", "最新截图录入"),
+        row("2026-06-10", "尿沉渣定量检测,尿干化学检测", "尿亚硝酸盐(干化学)", "阴性(-)", "", "阴性(-)", category="尿检/肾脏", source="最新截图录入"),
+        row("2026-06-10", "尿沉渣定量检测,尿干化学检测", "尿糖(干化学)", "阴性(-)", "", "阴性(-)", category="尿检/肾脏", source="最新截图录入"),
+        row("2026-06-10", "尿沉渣定量检测,尿干化学检测", "尿蛋白(干化学)", "阴性(-)", "", "阴性(-)", category="尿检/肾脏", source="最新截图录入"),
+        row("2026-06-10", "尿沉渣定量检测,尿干化学检测", "尿酮体(干化学)", "阴性(-)", "", "阴性(-)", category="尿检/肾脏", source="最新截图录入"),
+        row("2026-06-10", "尿沉渣定量检测,尿干化学检测", "尿胆红素(干化学)", "阴性(-)", "", "阴性(-)", category="尿检/肾脏", source="最新截图录入"),
+        row("2026-06-10", "尿沉渣定量检测,尿干化学检测", "尿胆原(干化学)", "阴性(-)", "", "阴性(-)", category="尿检/肾脏", source="最新截图录入"),
+        row("2026-06-10", "尿沉渣定量检测,尿干化学检测", "尿隐血(干化学)", "阳性(2+)", "", "阴性(-)", "异常", "尿检/肾脏", "最新截图录入"),
     ]
     return sorted(records, key=lambda r: (r["date"], r["category"], r["item"]))
 
@@ -338,6 +359,12 @@ def build_html(records: list[dict], files: list[dict]) -> str:
     abnormal = [r for r in records if abnormal_flag(r["flag"])]
     dates = sorted(r["date"] for r in records)
     file_months = Counter((f["date"][:7] if f["date"] else "未识别") for f in files)
+    latest_date = dates[-1]
+    latest_records = [r for r in records if r["date"] == latest_date]
+    latest_abnormal = [r for r in latest_records if abnormal_flag(r["flag"])]
+    abnormal_rate = round(len(abnormal) / max(1, len(records)) * 100)
+    max_category = max(categories.values()) if categories else 1
+    max_month = max(file_months.values()) if file_months else 1
 
     charts = "\n".join(
         filter(
@@ -349,18 +376,44 @@ def build_html(records: list[dict], files: list[dict]) -> str:
                 trend_svg(records, "PCT", "降钙素原 PCT 趋势", " ng/mL"),
                 trend_svg(records, "GGT", "GGT 趋势", " U/L"),
                 trend_svg(records, "ALT", "ALT 趋势", " U/L"),
+                trend_svg(records, "尿白细胞试验", "尿白细胞试验趋势", ""),
             ],
         )
     )
 
     category_rows = "\n".join(
-        f"<tr><td>{escape(k)}</td><td>{v}</td></tr>" for k, v in categories.most_common()
+        f"""
+        <div class="bar-row">
+          <div class="bar-label"><span>{escape(k)}</span><strong>{v}</strong></div>
+          <div class="bar-track"><div class="bar-fill" style="width:{v / max_category * 100:.1f}%"></div></div>
+        </div>
+        """
+        for k, v in categories.most_common()
     )
     month_rows = "\n".join(
-        f"<tr><td>{escape(k)}</td><td>{v}</td></tr>" for k, v in sorted(file_months.items())
+        f"""
+        <div class="bar-row compact">
+          <div class="bar-label"><span>{escape(k)}</span><strong>{v}</strong></div>
+          <div class="bar-track"><div class="bar-fill soft" style="width:{v / max_month * 100:.1f}%"></div></div>
+        </div>
+        """
+        for k, v in sorted(file_months.items())
     )
-    abnormal_rows = "\n".join(table_row(r) for r in abnormal)
+    abnormal_rows = "\n".join(table_row(r) for r in sorted(abnormal, key=lambda r: (r["date"], r["category"], r["item"]), reverse=True))
     all_rows = "\n".join(table_row(r) for r in records)
+    latest_rows = "\n".join(table_row(r) for r in latest_records)
+    latest_abnormal_cards = "\n".join(
+        f"""
+        <article class="signal {status_class(r['flag'])}">
+          <span>{escape(r["flag"])}</span>
+          <strong>{escape(r["item"])}</strong>
+          <p>{escape(r["result"])} {escape(r["unit"])} / 参考 {escape(r["reference"] or "未提供")}</p>
+        </article>
+        """
+        for r in latest_abnormal
+    )
+    if not latest_abnormal_cards:
+        latest_abnormal_cards = '<article class="signal ok"><span>正常</span><strong>最新报告未录入异常项</strong><p>仍建议结合医生意见复核。</p></article>'
     file_rows = "\n".join(
         f'<tr><td>{escape(f["date"])}</td><td>{escape(f["bucket"])}</td><td><a href="{f["href"]}">{escape(f["name"])}</a></td><td>{escape(f["extension"])}</td><td>{f["size_mb"]}</td></tr>'
         for f in files
@@ -374,86 +427,182 @@ def build_html(records: list[dict], files: list[dict]) -> str:
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>健康检查资料数据看板</title>
+  <title>AAV随访数据看板</title>
   <style>
     :root {{
-      --bg: #f7f8fa;
+      --bg: #f8fafc;
       --panel: #ffffff;
-      --ink: #172026;
-      --muted: #64717d;
-      --line: #d9e0e6;
-      --teal: #0f766e;
+      --ink: #0f172a;
+      --muted: #64748b;
+      --line: #e2e8f0;
       --blue: #2563eb;
-      --red: #be123c;
-      --amber: #b45309;
-      --green: #15803d;
+      --blue-soft: #dbeafe;
+      --emerald: #059669;
+      --emerald-soft: #d1fae5;
+      --red: #dc2626;
+      --red-soft: #fee2e2;
+      --amber: #d97706;
+      --amber-soft: #fef3c7;
+      --violet: #7c3aed;
     }}
     * {{ box-sizing: border-box; }}
+    html {{ scroll-behavior: smooth; }}
     body {{ margin: 0; font: 14px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif; color: var(--ink); background: var(--bg); }}
-    header {{ padding: 28px 32px 18px; background: #ffffff; border-bottom: 1px solid var(--line); }}
-    h1 {{ margin: 0 0 8px; font-size: 28px; letter-spacing: 0; }}
-    h2 {{ margin: 0 0 14px; font-size: 18px; }}
-    h3 {{ margin: 0 0 8px; font-size: 14px; }}
-    main {{ padding: 24px 32px 48px; max-width: 1480px; margin: 0 auto; }}
-    .note {{ color: var(--muted); max-width: 980px; }}
+    a {{ color: var(--blue); text-decoration: none; }}
+    .shell {{ max-width: 1280px; margin: 0 auto; padding: 24px; }}
+    .hero {{ border: 1px solid var(--line); border-radius: 8px; background: linear-gradient(135deg, #ffffff 0%, #eff6ff 55%, #ecfdf5 100%); padding: 24px; box-shadow: 0 10px 30px rgba(15, 23, 42, .06); }}
+    .hero-top {{ display: flex; justify-content: space-between; gap: 18px; align-items: flex-start; }}
+    .eyebrow {{ display: inline-flex; align-items: center; gap: 8px; color: var(--blue); background: rgba(37, 99, 235, .1); border: 1px solid rgba(37, 99, 235, .18); border-radius: 999px; padding: 5px 10px; font-size: 12px; font-weight: 700; }}
+    h1 {{ margin: 12px 0 8px; font-size: 30px; line-height: 1.2; letter-spacing: 0; }}
+    h2 {{ margin: 0; font-size: 18px; line-height: 1.35; }}
+    h3 {{ margin: 0 0 10px; font-size: 14px; }}
+    .note {{ color: var(--muted); max-width: 760px; }}
+    .stamp {{ text-align: right; color: var(--muted); font-size: 12px; min-width: 190px; }}
+    .stamp strong {{ display: block; color: var(--ink); font-size: 18px; }}
+    .nav {{ display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }}
+    .nav a {{ color: var(--ink); background: rgba(255,255,255,.72); border: 1px solid var(--line); border-radius: 999px; padding: 7px 12px; font-weight: 650; }}
+    main {{ margin-top: 18px; }}
     .grid {{ display: grid; gap: 16px; }}
-    .kpis {{ grid-template-columns: repeat(5, minmax(150px, 1fr)); margin-bottom: 18px; }}
-    .kpi, section, .chart-panel {{ background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 16px; }}
-    .kpi span {{ display: block; color: var(--muted); font-size: 12px; }}
-    .kpi strong {{ font-size: 24px; }}
-    .two {{ grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr); }}
-    .charts {{ grid-template-columns: repeat(3, minmax(260px, 1fr)); margin: 18px 0; }}
+    .kpis {{ grid-template-columns: repeat(5, minmax(150px, 1fr)); }}
+    .kpi, section, .chart-panel, .signal {{ background: var(--panel); border: 1px solid var(--line); border-radius: 8px; }}
+    .kpi {{ padding: 16px; position: relative; overflow: hidden; }}
+    .kpi:after {{ content: ""; position: absolute; right: -18px; top: -22px; width: 72px; height: 72px; border-radius: 999px; background: var(--blue-soft); opacity: .65; }}
+    .kpi span {{ display: block; color: var(--muted); font-size: 12px; font-weight: 650; }}
+    .kpi strong {{ display: block; margin-top: 6px; font-size: 26px; line-height: 1; }}
+    .kpi small {{ color: var(--muted); }}
+    section {{ padding: 18px; }}
+    .section-head {{ display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 14px; }}
+    .section-head p {{ margin: 4px 0 0; color: var(--muted); }}
+    .two {{ grid-template-columns: minmax(0, 1.55fr) minmax(320px, .9fr); }}
+    .three {{ grid-template-columns: repeat(3, minmax(0, 1fr)); }}
+    .charts {{ grid-template-columns: repeat(3, minmax(260px, 1fr)); }}
+    .signals {{ grid-template-columns: repeat(3, minmax(0, 1fr)); }}
+    .signal {{ padding: 14px; border-left-width: 4px; }}
+    .signal span {{ display: inline-flex; border-radius: 999px; padding: 2px 8px; font-size: 12px; font-weight: 700; }}
+    .signal strong {{ display: block; margin-top: 10px; }}
+    .signal p {{ margin: 4px 0 0; color: var(--muted); }}
+    .signal.high, .signal.low, .signal.abnormal {{ border-left-color: var(--red); background: linear-gradient(180deg, #fff 0%, #fff7f7 100%); }}
+    .signal.ok {{ border-left-color: var(--emerald); }}
+    .signal.unknown {{ border-left-color: var(--amber); }}
+    .pill {{ display: inline-flex; border-radius: 999px; padding: 4px 9px; background: var(--blue-soft); color: var(--blue); font-weight: 700; font-size: 12px; }}
+    .callout {{ border: 1px dashed #93c5fd; background: #eff6ff; color: #1e3a8a; border-radius: 8px; padding: 12px 14px; }}
+    .callout strong {{ display: block; margin-bottom: 3px; color: #1d4ed8; }}
     svg {{ width: 100%; height: auto; }}
     svg line {{ stroke: var(--line); }}
-    svg path {{ fill: none; stroke: var(--teal); stroke-width: 3; }}
-    svg circle {{ fill: #fff; stroke: var(--teal); stroke-width: 2; }}
+    svg path {{ fill: none; stroke: var(--blue); stroke-width: 3; }}
+    svg circle {{ fill: #fff; stroke: var(--blue); stroke-width: 2; }}
     svg text {{ fill: var(--muted); font-size: 11px; }}
+    .chart-panel {{ padding: 16px; }}
     .toolbar {{ display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 6px 0 12px; }}
     input, select, button {{ border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; background: #fff; color: var(--ink); }}
-    button {{ cursor: pointer; }}
-    button.active {{ background: var(--ink); color: #fff; }}
     table {{ width: 100%; border-collapse: collapse; }}
     th, td {{ padding: 9px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }}
-    th {{ color: var(--muted); font-size: 12px; background: #fbfcfd; position: sticky; top: 0; }}
+    th {{ color: var(--muted); font-size: 12px; background: #f8fafc; position: sticky; top: 0; z-index: 1; }}
     .table-wrap {{ max-height: 520px; overflow: auto; border: 1px solid var(--line); border-radius: 8px; }}
-    a {{ color: var(--blue); text-decoration: none; }}
     .flag {{ display: inline-block; min-width: 44px; text-align: center; border-radius: 999px; padding: 2px 8px; font-size: 12px; }}
-    .ok {{ color: var(--green); background: #ecfdf3; }}
-    .high, .low, .abnormal {{ color: var(--red); background: #fff1f2; }}
-    .unknown {{ color: var(--amber); background: #fffbeb; }}
-    footer {{ padding: 20px 32px; color: var(--muted); border-top: 1px solid var(--line); background: #fff; }}
-    @media (max-width: 980px) {{ main, header, footer {{ padding-left: 16px; padding-right: 16px; }} .kpis, .two, .charts {{ grid-template-columns: 1fr; }} }}
+    .ok {{ color: var(--emerald); background: var(--emerald-soft); }}
+    .high, .low, .abnormal {{ color: var(--red); background: var(--red-soft); }}
+    .unknown {{ color: var(--amber); background: var(--amber-soft); }}
+    .bar-row {{ margin-bottom: 12px; }}
+    .bar-row.compact {{ margin-bottom: 10px; }}
+    .bar-label {{ display: flex; justify-content: space-between; gap: 12px; margin-bottom: 6px; color: var(--muted); }}
+    .bar-label span {{ color: var(--ink); }}
+    .bar-track {{ height: 8px; background: #eef2f7; border-radius: 999px; overflow: hidden; }}
+    .bar-fill {{ height: 100%; background: linear-gradient(90deg, var(--blue), var(--emerald)); border-radius: inherit; }}
+    .bar-fill.soft {{ background: linear-gradient(90deg, #93c5fd, #a7f3d0); }}
+    footer {{ margin-top: 18px; padding: 16px 0 4px; color: var(--muted); }}
+    @media (max-width: 980px) {{ .shell {{ padding: 16px; }} .hero-top {{ flex-direction: column; }} .stamp {{ text-align: left; }} .kpis, .two, .three, .charts, .signals {{ grid-template-columns: 1fr; }} h1 {{ font-size: 24px; }} }}
   </style>
 </head>
 <body>
-  <header>
-    <h1>健康检查资料数据看板</h1>
-    <div class="note">数据来源包括截图可见内容、部分可抽取文字的 PDF，以及完整原始资料文件索引。此看板用于资料整理和趋势追踪，不能替代医生诊断或用药建议。</div>
-  </header>
-  <main>
+  <div class="shell">
+    <header class="hero">
+      <div class="hero-top">
+        <div>
+          <div class="eyebrow">AAV 随访资料 · 本地健康档案</div>
+          <h1>AAV随访数据看板</h1>
+          <div class="note">整合检查报告、趋势指标和原始文件索引。数据用于资料整理和复诊沟通，不能替代医生诊断或用药建议。</div>
+        </div>
+        <div class="stamp">
+          <span>最新报告日期</span>
+          <strong>{escape(latest_date)}</strong>
+          <span>{len(latest_records)} 条本次指标</span>
+        </div>
+      </div>
+      <nav class="nav">
+        <a href="#overview">总览</a>
+        <a href="#latest">最新报告</a>
+        <a href="#signals">异常提醒</a>
+        <a href="#trends">趋势图</a>
+        <a href="#details">指标明细</a>
+        <a href="#files">原始资料</a>
+      </nav>
+    </header>
+
+  <main id="overview">
     <div class="grid kpis">
-      <div class="kpi"><span>结构化指标</span><strong>{len(records)}</strong></div>
-      <div class="kpi"><span>异常/偏离项目</span><strong>{len(abnormal)}</strong></div>
-      <div class="kpi"><span>原始资料文件</span><strong>{len(files)}</strong></div>
-      <div class="kpi"><span>时间范围</span><strong>{escape(dates[0])}</strong><span>至 {escape(dates[-1])}</span></div>
-      <div class="kpi"><span>主要异常类型</span><strong>{escape(flags.most_common(1)[0][0])}</strong><span>{flags.most_common(1)[0][1]} 项</span></div>
+      <div class="kpi"><span>结构化指标</span><strong>{len(records)}</strong><small>已录入看板</small></div>
+      <div class="kpi"><span>异常/偏离项目</span><strong>{len(abnormal)}</strong><small>占 {abnormal_rate}%</small></div>
+      <div class="kpi"><span>原始资料文件</span><strong>{len(files)}</strong><small>报告、截图、PDF</small></div>
+      <div class="kpi"><span>随访时间范围</span><strong>{escape(dates[0])}</strong><small>至 {escape(dates[-1])}</small></div>
+      <div class="kpi"><span>最新报告异常项</span><strong>{len(latest_abnormal)}</strong><small>{escape(latest_date)}</small></div>
     </div>
 
-    <div class="grid two">
-      <section>
-        <h2>异常项目速览</h2>
+    <section id="latest" style="margin-top:16px;">
+      <div class="section-head">
+        <div>
+          <h2>最新报告：尿沉渣定量检测 / 尿干化学检测</h2>
+          <p>中山医一院，采集时间 2026-06-10 08:26，报告时间 2026-06-10 08:50。</p>
+        </div>
+        <span class="pill">已加入仓库</span>
+      </div>
+      <div class="grid signals">{latest_abnormal_cards}</div>
+      <div class="callout" style="margin-top:14px;">
+        <strong>本次尿检提示项</strong>
+        白细胞、细菌、黏液丝、尿隐血和尿粒细胞酯酶已标记为异常/偏高；尿蛋白为阴性。建议作为复诊沟通素材，结合症状、用药和医生判断复核。
+      </div>
+      <div class="table-wrap" style="margin-top:14px;"><table><thead>{table_head()}</thead><tbody>{latest_rows}</tbody></table></div>
+    </section>
+
+    <div class="grid two" style="margin-top:16px;">
+      <section id="signals">
+        <div class="section-head">
+          <div>
+            <h2>异常项目速览</h2>
+            <p>按日期倒序展示偏高、偏低和阳性项目。</p>
+          </div>
+          <span class="pill">{len(abnormal)} 项</span>
+        </div>
         <div class="table-wrap"><table><thead>{table_head()}</thead><tbody>{abnormal_rows}</tbody></table></div>
       </section>
       <section>
-        <h2>分类分布</h2>
-        <table><thead><tr><th>分类</th><th>指标数</th></tr></thead><tbody>{category_rows}</tbody></table>
+        <div class="section-head">
+          <div>
+            <h2>分类分布</h2>
+            <p>用于快速定位资料集中在哪些检查方向。</p>
+          </div>
+        </div>
+        {category_rows}
       </section>
     </div>
 
-    <div class="grid charts">{charts}</div>
+    <section id="trends" style="margin-top:16px;">
+      <div class="section-head">
+        <div>
+          <h2>核心趋势图</h2>
+          <p>展示已有连续数据的指标，鼠标悬停可查看单点数值。</p>
+        </div>
+      </div>
+      <div class="grid charts">{charts}</div>
+    </section>
 
-    <section>
-      <h2>结构化指标明细</h2>
+    <section id="details" style="margin-top:16px;">
+      <div class="section-head">
+        <div>
+          <h2>结构化指标明细</h2>
+          <p>支持按状态筛选，也可以搜索项目、报告或分类。</p>
+        </div>
+      </div>
       <div class="toolbar">
         <input id="metricSearch" type="search" placeholder="搜索项目、报告、分类" />
         <select id="flagFilter">
@@ -468,15 +617,21 @@ def build_html(records: list[dict], files: list[dict]) -> str:
       <div class="table-wrap"><table id="metricTable"><thead>{table_head()}</thead><tbody>{all_rows}</tbody></table></div>
     </section>
 
-    <section style="margin-top:18px;">
-      <h2>原始资料索引</h2>
+    <section id="files" style="margin-top:16px;">
+      <div class="section-head">
+        <div>
+          <h2>原始资料索引</h2>
+          <p>所有原始报告都保留链接，便于回看原件。</p>
+        </div>
+      </div>
       <div class="grid two">
         <div class="table-wrap"><table id="fileTable"><thead><tr><th>日期</th><th>目录</th><th>文件</th><th>类型</th><th>MB</th></tr></thead><tbody>{file_rows}</tbody></table></div>
-        <div><h3>文件月份分布</h3><table><thead><tr><th>月份</th><th>文件数</th></tr></thead><tbody>{month_rows}</tbody></table></div>
+        <div><h3>文件月份分布</h3>{month_rows}</div>
       </div>
     </section>
   </main>
   <footer>最后生成：{datetime.now().strftime("%Y-%m-%d %H:%M")}。建议后续补充 OCR 后再做完整医学趋势分析。</footer>
+  </div>
   <script>
     const records = {data_json};
     const files = {files_json};
