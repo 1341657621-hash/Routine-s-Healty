@@ -53,6 +53,7 @@
     .three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .charts { grid-template-columns: repeat(3, minmax(260px, 1fr)); }
     .signals { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .trend-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
     .signal { padding: 14px; border-left-width: 4px; }
     .signal span { display: inline-flex; border-radius: 999px; padding: 2px 8px; font-size: 12px; font-weight: 700; }
     .signal strong { display: block; margin-top: 10px; }
@@ -63,6 +64,33 @@
     .pill { display: inline-flex; border-radius: 999px; padding: 4px 9px; background: var(--blue-soft); color: var(--blue); font-weight: 700; font-size: 12px; }
     .callout { border: 1px dashed #93c5fd; background: #eff6ff; color: #1e3a8a; border-radius: 8px; padding: 12px 14px; }
     .callout strong { display: block; margin-bottom: 3px; color: #1d4ed8; }
+    .analysis-list { margin: 0; padding-left: 18px; color: var(--ink); }
+    .analysis-list li { margin: 0 0 10px; color: #334155; }
+    .flag-bars { display: grid; gap: 11px; }
+    .flag-bar { display: grid; grid-template-columns: 58px 1fr 36px; gap: 10px; align-items: center; color: var(--muted); }
+    .flag-bar div { height: 9px; background: #eef2f7; border-radius: 999px; overflow: hidden; }
+    .flag-bar i { display: block; height: 100%; border-radius: inherit; min-width: 3px; }
+    .flag-bar i.ok { background: var(--emerald); }
+    .flag-bar i.high, .flag-bar i.low, .flag-bar i.abnormal { background: var(--red); }
+    .flag-bar i.unknown { background: var(--amber); }
+    .trend-card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; min-width: 0; }
+    .trend-head { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+    .trend-head span { display: block; color: var(--muted); font-size: 12px; font-weight: 700; }
+    .trend-head strong { display: block; margin-top: 4px; font-size: 20px; line-height: 1.15; }
+    .trend-head em { font-style: normal; flex: 0 0 auto; }
+    .spark { width: 100%; height: 78px; margin-top: 8px; }
+    .spark line { stroke: var(--line); }
+    .spark-area { opacity: .10; }
+    .spark-line { fill: none; stroke-width: 3; }
+    .spark circle { fill: #fff; stroke-width: 2; }
+    .spark text { fill: var(--muted); font-size: 10px; }
+    .spark-empty { margin-top: 10px; color: var(--muted); height: 78px; display: flex; align-items: center; }
+    .trend-foot { border-top: 1px solid var(--line); padding-top: 10px; margin-top: 6px; display: grid; gap: 2px; }
+    .trend-foot b { font-size: 12px; }
+    .trend-foot small { color: var(--muted); }
+    .trend-foot .up { color: var(--red); }
+    .trend-foot .down { color: var(--emerald); }
+    .trend-foot .flat { color: var(--amber); }
     svg { width: 100%; height: auto; }
     svg line { stroke: var(--line); }
     svg path { fill: none; stroke: var(--blue); stroke-width: 3; }
@@ -87,7 +115,7 @@
     .bar-fill { height: 100%; background: linear-gradient(90deg, var(--blue), var(--emerald)); border-radius: inherit; }
     .bar-fill.soft { background: linear-gradient(90deg, #93c5fd, #a7f3d0); }
     footer { margin-top: 18px; padding: 16px 0 4px; color: var(--muted); }
-    @media (max-width: 980px) { .shell { padding: 16px; } .hero-top { flex-direction: column; } .stamp { text-align: left; } .kpis, .two, .three, .charts, .signals { grid-template-columns: 1fr; } h1 { font-size: 24px; } }
+    @media (max-width: 980px) { .shell { padding: 16px; } .hero-top { flex-direction: column; } .stamp { text-align: left; } .kpis, .two, .three, .charts, .signals, .trend-grid { grid-template-columns: 1fr; } h1 { font-size: 24px; } }
   </style>
 </head>
 <body>
@@ -107,8 +135,10 @@
       </div>
       <nav class="nav">
         <a href="#overview">总览</a>
+        <a href="#analysis">分析总结</a>
         <a href="#latest">最新报告</a>
         <a href="#signals">异常提醒</a>
+        <a href="#fluctuation">指标起伏</a>
         <a href="#trends">趋势图</a>
         <a href="#details">指标明细</a>
         <a href="#files">原始资料</a>
@@ -123,6 +153,67 @@
       <div class="kpi"><span>随访时间范围</span><strong>2023-10-16</strong><small>至 2026-06-10</small></div>
       <div class="kpi"><span>最新报告异常项</span><strong>7</strong><small>2026-06-10</small></div>
     </div>
+
+    <section id="analysis" style="margin-top:16px;">
+      <div class="section-head">
+        <div>
+          <h2>随访分析总结</h2>
+          <p>根据已结构化数据自动生成，重点看方向、幅度和是否仍偏离参考范围。</p>
+        </div>
+        <span class="pill">自动汇总</span>
+      </div>
+      <div class="grid two">
+        <div class="callout">
+          <strong>关键变化</strong>
+          <ul class="analysis-list">
+            <li>PR3/蛋白酶3抗体：从 2024-03-21 的 186.99mg/L 到 2024-05-21 的 158.07mg/L，整体下降 28.92 mg/L（约 15.5%），最近状态为偏高。</li>
+<li>D-二聚体：从 2023-10-16 的 384ng/ml FEU 到 2024-05-20 的 1239ng/ml FEU，整体上升 855 ng/ml FEU（约 222.7%），最近状态为偏高。</li>
+<li>蛋白S活性：从 2024-03-19 的 35% 到 2024-05-21 的 28%，整体下降 7%（约 20.0%），最近状态为偏低。</li>
+<li>GGT：从 2025-06-26 的 163U/L 到 2025-08-19 的 111U/L，整体下降 52 U/L（约 31.9%），最近状态为偏高。</li>
+<li>ALT：从 2025-06-26 的 62U/L 到 2025-08-19 的 48U/L，整体下降 14 U/L（约 22.6%），最近状态为偏高。</li>
+            <li>2026-06-10 尿检：共录入 21 条指标，其中 7 条为异常/偏高；尿蛋白为阴性，尿隐血和尿粒细胞酯酶为阳性(2+)。</li>
+          </ul>
+        </div>
+        <div>
+          <h3>指标状态分布</h3>
+          <div class="flag-bars">
+        <div class="flag-bar">
+          <span>正常</span>
+          <div><i class="ok" style="width:63.9%"></i></div>
+          <b>99</b>
+        </div>
+        
+
+        <div class="flag-bar">
+          <span>偏高</span>
+          <div><i class="high" style="width:20.6%"></i></div>
+          <b>32</b>
+        </div>
+        
+
+        <div class="flag-bar">
+          <span>偏低</span>
+          <div><i class="low" style="width:5.2%"></i></div>
+          <b>8</b>
+        </div>
+        
+
+        <div class="flag-bar">
+          <span>未判定</span>
+          <div><i class="unknown" style="width:5.2%"></i></div>
+          <b>8</b>
+        </div>
+        
+
+        <div class="flag-bar">
+          <span>异常</span>
+          <div><i class="abnormal" style="width:5.2%"></i></div>
+          <b>8</b>
+        </div>
+        </div>
+        </div>
+      </div>
+    </section>
 
     <section id="latest" style="margin-top:16px;">
       <div class="section-head">
@@ -401,6 +492,213 @@
         
       </section>
     </div>
+
+    <section id="fluctuation" style="margin-top:16px;">
+      <div class="section-head">
+        <div>
+          <h2>关键指标起伏</h2>
+          <p>每张卡片显示最新值、较上次变化，以及已有记录的迷你趋势线。</p>
+        </div>
+      </div>
+      <div class="grid trend-grid">
+    <article class="trend-card">
+      <div class="trend-head">
+        <div>
+          <span>PR3 / 蛋白酶3抗体</span>
+          <strong>158.07 mg/L</strong>
+        </div>
+        <em class="flag high">偏高</em>
+      </div>
+      
+    <svg class="spark" viewBox="0 0 260 78" role="img" aria-label="指标起伏">
+      <path class="spark-area" d="M18.0,18.0 L80.4,35.7 L242.0,60.0 L 242.0,60.0 L 18.0,60.0 Z" style="fill:#dc2626;" />
+      <path class="spark-line" d="M18.0,18.0 L80.4,35.7 L242.0,60.0" style="stroke:#dc2626;" />
+      <circle cx="18.0" cy="18.0" r="3.5" style="stroke:#dc2626"><title>2024-03-21: 186.99</title></circle>
+<circle cx="80.4" cy="35.7" r="3.5" style="stroke:#dc2626"><title>2024-04-07: 174.8</title></circle>
+<circle cx="242.0" cy="60.0" r="3.5" style="stroke:#dc2626"><title>2024-05-21: 158.07</title></circle>
+      <text x="18" y="72">24-03-21</text>
+      <text x="242" y="72" text-anchor="end">24-05-21</text>
+    </svg>
+    
+      <div class="trend-foot">
+        <b class="down">较上次下降：↓ 16.73 mg/L / 9.6%</b>
+        <small>2024-04-07 → 2024-05-21；参考 ≤2.00</small>
+      </div>
+    </article>
+    
+
+    <article class="trend-card">
+      <div class="trend-head">
+        <div>
+          <span>D-二聚体</span>
+          <strong>1239 ng/ml FEU</strong>
+        </div>
+        <em class="flag high">偏高</em>
+      </div>
+      
+    <svg class="spark" viewBox="0 0 260 78" role="img" aria-label="指标起伏">
+      <path class="spark-area" d="M18.0,60.0 L175.9,43.6 L180.1,37.1 L242.0,18.0 L 242.0,60.0 L 18.0,60.0 Z" style="fill:#dc2626;" />
+      <path class="spark-line" d="M18.0,60.0 L175.9,43.6 L180.1,37.1 L242.0,18.0" style="stroke:#dc2626;" />
+      <circle cx="18.0" cy="60.0" r="3.5" style="stroke:#dc2626"><title>2023-10-16: 384</title></circle>
+<circle cx="175.9" cy="43.6" r="3.5" style="stroke:#dc2626"><title>2024-03-17: 718</title></circle>
+<circle cx="180.1" cy="37.1" r="3.5" style="stroke:#dc2626"><title>2024-03-21: 851</title></circle>
+<circle cx="242.0" cy="18.0" r="3.5" style="stroke:#dc2626"><title>2024-05-20: 1239</title></circle>
+      <text x="18" y="72">23-10-16</text>
+      <text x="242" y="72" text-anchor="end">24-05-20</text>
+    </svg>
+    
+      <div class="trend-foot">
+        <b class="up">较上次升高：↑ 388 ng/ml FEU / 45.6%</b>
+        <small>2024-03-21 → 2024-05-20；参考 68-494</small>
+      </div>
+    </article>
+    
+
+    <article class="trend-card">
+      <div class="trend-head">
+        <div>
+          <span>蛋白S活性</span>
+          <strong>28 %</strong>
+        </div>
+        <em class="flag low">偏低</em>
+      </div>
+      
+    <svg class="spark" viewBox="0 0 260 78" role="img" aria-label="指标起伏">
+      <path class="spark-area" d="M18.0,18.0 L242.0,60.0 L 242.0,60.0 L 18.0,60.0 Z" style="fill:#dc2626;" />
+      <path class="spark-line" d="M18.0,18.0 L242.0,60.0" style="stroke:#dc2626;" />
+      <circle cx="18.0" cy="18.0" r="3.5" style="stroke:#dc2626"><title>2024-03-19: 35</title></circle>
+<circle cx="242.0" cy="60.0" r="3.5" style="stroke:#dc2626"><title>2024-05-21: 28</title></circle>
+      <text x="18" y="72">24-03-19</text>
+      <text x="242" y="72" text-anchor="end">24-05-21</text>
+    </svg>
+    
+      <div class="trend-foot">
+        <b class="down">较上次下降：↓ 7% / 20.0%</b>
+        <small>2024-03-19 → 2024-05-21；参考 55-140</small>
+      </div>
+    </article>
+    
+
+    <article class="trend-card">
+      <div class="trend-head">
+        <div>
+          <span>GGT</span>
+          <strong>111 U/L</strong>
+        </div>
+        <em class="flag high">偏高</em>
+      </div>
+      
+    <svg class="spark" viewBox="0 0 260 78" role="img" aria-label="指标起伏">
+      <path class="spark-area" d="M18.0,18.0 L242.0,60.0 L 242.0,60.0 L 18.0,60.0 Z" style="fill:#dc2626;" />
+      <path class="spark-line" d="M18.0,18.0 L242.0,60.0" style="stroke:#dc2626;" />
+      <circle cx="18.0" cy="18.0" r="3.5" style="stroke:#dc2626"><title>2025-06-26: 163</title></circle>
+<circle cx="242.0" cy="60.0" r="3.5" style="stroke:#dc2626"><title>2025-08-19: 111</title></circle>
+      <text x="18" y="72">25-06-26</text>
+      <text x="242" y="72" text-anchor="end">25-08-19</text>
+    </svg>
+    
+      <div class="trend-foot">
+        <b class="down">较上次下降：↓ 52 U/L / 31.9%</b>
+        <small>2025-06-26 → 2025-08-19；参考 2-50</small>
+      </div>
+    </article>
+    
+
+    <article class="trend-card">
+      <div class="trend-head">
+        <div>
+          <span>ALT</span>
+          <strong>48 U/L</strong>
+        </div>
+        <em class="flag high">偏高</em>
+      </div>
+      
+    <svg class="spark" viewBox="0 0 260 78" role="img" aria-label="指标起伏">
+      <path class="spark-area" d="M18.0,18.0 L242.0,60.0 L 242.0,60.0 L 18.0,60.0 Z" style="fill:#dc2626;" />
+      <path class="spark-line" d="M18.0,18.0 L242.0,60.0" style="stroke:#dc2626;" />
+      <circle cx="18.0" cy="18.0" r="3.5" style="stroke:#dc2626"><title>2025-06-26: 62</title></circle>
+<circle cx="242.0" cy="60.0" r="3.5" style="stroke:#dc2626"><title>2025-08-19: 48</title></circle>
+      <text x="18" y="72">25-06-26</text>
+      <text x="242" y="72" text-anchor="end">25-08-19</text>
+    </svg>
+    
+      <div class="trend-foot">
+        <b class="down">较上次下降：↓ 14 U/L / 22.6%</b>
+        <small>2025-06-26 → 2025-08-19；参考 1-40</small>
+      </div>
+    </article>
+    
+
+    <article class="trend-card">
+      <div class="trend-head">
+        <div>
+          <span>降钙素原 PCT</span>
+          <strong>&lt;0.05 ng/mL</strong>
+        </div>
+        <em class="flag high">偏高</em>
+      </div>
+      
+    <svg class="spark" viewBox="0 0 260 78" role="img" aria-label="指标起伏">
+      <path class="spark-area" d="M18.0,60.0 L234.4,18.0 L242.0,60.0 L 242.0,60.0 L 18.0,60.0 Z" style="fill:#dc2626;" />
+      <path class="spark-line" d="M18.0,60.0 L234.4,18.0 L242.0,60.0" style="stroke:#dc2626;" />
+      <circle cx="18.0" cy="60.0" r="3.5" style="stroke:#dc2626"><title>2024-02-26: 0.05</title></circle>
+<circle cx="234.4" cy="18.0" r="3.5" style="stroke:#dc2626"><title>2024-05-21: 0.07</title></circle>
+<circle cx="242.0" cy="60.0" r="3.5" style="stroke:#dc2626"><title>2024-05-24: 0.05</title></circle>
+      <text x="18" y="72">24-02-26</text>
+      <text x="242" y="72" text-anchor="end">24-05-24</text>
+    </svg>
+    
+      <div class="trend-foot">
+        <b class="down">较上次下降：↓ 0.02 ng/mL / 28.6%</b>
+        <small>2024-05-21 → 2024-05-24；参考 &lt;0.05</small>
+      </div>
+    </article>
+    
+
+    <article class="trend-card">
+      <div class="trend-head">
+        <div>
+          <span>尿白细胞(图像)</span>
+          <strong>105 个/uL</strong>
+        </div>
+        <em class="flag high">偏高</em>
+      </div>
+      
+        <svg class="spark" viewBox="0 0 260 78" role="img" aria-label="单次指标">
+          <line x1="18" y1="48" x2="242" y2="48" />
+          <circle cx="130" cy="48" r="5" style="stroke:#dc2626" />
+          <text x="130" y="70" text-anchor="middle">2026-06-10</text>
+        </svg>
+        
+      <div class="trend-foot">
+        <b class="flat">仅一次记录：等待后续复查</b>
+        <small>2026-06-10；参考 ≤12</small>
+      </div>
+    </article>
+    
+
+    <article class="trend-card">
+      <div class="trend-head">
+        <div>
+          <span>尿细菌(图像)</span>
+          <strong>319 个/uL</strong>
+        </div>
+        <em class="flag high">偏高</em>
+      </div>
+      
+        <svg class="spark" viewBox="0 0 260 78" role="img" aria-label="单次指标">
+          <line x1="18" y1="48" x2="242" y2="48" />
+          <circle cx="130" cy="48" r="5" style="stroke:#dc2626" />
+          <text x="130" y="70" text-anchor="middle">2026-06-10</text>
+        </svg>
+        
+      <div class="trend-foot">
+        <b class="flat">仅一次记录：等待后续复查</b>
+        <small>2026-06-10；参考 ≤130</small>
+      </div>
+    </article>
+    </div>
+    </section>
 
     <section id="trends" style="margin-top:16px;">
       <div class="section-head">
@@ -1029,7 +1327,7 @@
       </div>
     </section>
   </main>
-  <footer>最后生成：2026-06-10 12:22。建议后续补充 OCR 后再做完整医学趋势分析。</footer>
+  <footer>最后生成：2026-06-10 13:11。建议后续补充 OCR 后再做完整医学趋势分析。</footer>
   </div>
   <script>
     const records = [{"date": "2023-10-16", "report": "血浆D-二聚体测定", "category": "凝血/易栓", "item": "D-二聚体", "result": "384", "unit": "ng/ml FEU", "reference": "68-494", "flag": "正常", "source": "截图可见内容"}, {"date": "2023-10-16", "report": "血型分析", "category": "基础信息", "item": "ABO血型", "result": "O", "unit": "", "reference": "", "flag": "正常", "source": "截图可见内容"}, {"date": "2023-10-16", "report": "血型分析", "category": "基础信息", "item": "Rh血型", "result": "阳性(+)", "unit": "", "reference": "", "flag": "正常", "source": "截图可见内容"}, {"date": "2023-10-16", "report": "乙型肝炎表面抗原测定", "category": "感染筛查", "item": "HBsAg", "result": "0.00", "unit": "IU/mL", "reference": "<0.05", "flag": "正常", "source": "截图可见内容"}, {"date": "2023-10-16", "report": "HIV Ag/Ab", "category": "感染筛查", "item": "HIV抗原及抗体", "result": "0.10", "unit": "s/co", "reference": "<1.00", "flag": "正常", "source": "截图可见内容"}, {"date": "2023-10-16", "report": "梅毒螺旋体特异抗体测定", "category": "感染筛查", "item": "TPPA", "result": "<1:80", "unit": "", "reference": "<1:80", "flag": "偏高", "source": "截图可见内容"}, {"date": "2023-10-16", "report": "糖化血红蛋白", "category": "糖代谢", "item": "HbA1c", "result": "5.55", "unit": "%", "reference": "4.00-6.00", "flag": "正常", "source": "截图可见内容"}, {"date": "2023-10-16", "report": "25-羟基维生素D", "category": "营养/代谢", "item": "25-羟基维生素D", "result": "17.56", "unit": "ng/mL", "reference": ">=20.00", "flag": "偏低", "source": "截图可见内容"}, {"date": "2023-10-16", "report": "血清铁蛋白", "category": "营养/铁代谢", "item": "铁蛋白", "result": "95.00", "unit": "ng/mL", "reference": "13.00-150.00", "flag": "正常", "source": "截图可见内容"}, {"date": "2023-10-16", "report": "葡萄糖6-磷酸脱氢酶活性检测", "category": "遗传/酶学", "item": "G6PD活性", "result": "1.22", "unit": "kU/L", "reference": "成人:1.00-2.30", "flag": "正常", "source": "截图可见内容"}, {"date": "2023-10-17", "report": "葡萄糖6-磷酸脱氢酶活性检测", "category": "遗传/酶学", "item": "G6PD活性", "result": "1.22", "unit": "kU/L", "reference": "成人:1.00-2.30", "flag": "正常", "source": "截图可见内容"}, {"date": "2023-10-19", "report": "血红蛋白分析", "category": "血红蛋白", "item": "Hb A", "result": "97.4", "unit": "%", "reference": ">94.5", "flag": "正常", "source": "截图可见内容"}, {"date": "2023-10-19", "report": "血红蛋白分析", "category": "血红蛋白", "item": "Hb A2", "result": "2.6", "unit": "%", "reference": "2.5-3.5", "flag": "正常", "source": "截图可见内容"}, {"date": "2023-10-19", "report": "血红蛋白分析", "category": "血红蛋白", "item": "Hb Barts", "result": "未见", "unit": "%", "reference": "0-0", "flag": "正常", "source": "截图可见内容"}, {"date": "2023-10-19", "report": "血红蛋白分析", "category": "血红蛋白", "item": "Hb CS", "result": "未见", "unit": "%", "reference": "0-0", "flag": "正常", "source": "截图可见内容"}, {"date": "2023-10-19", "report": "血红蛋白分析", "category": "血红蛋白", "item": "血红蛋白H包涵体", "result": "<5", "unit": "%", "reference": "<5", "flag": "偏高", "source": "截图可见内容"}, {"date": "2023-11-22", "report": "乙肝两对半定量", "category": "感染筛查", "item": "乙肝e抗体", "result": "<0.18", "unit": "IU/mL", "reference": "<0.20", "flag": "正常", "source": "截图可见内容"}, {"date": "2023-11-22", "report": "乙肝两对半定量", "category": "感染筛查", "item": "乙肝e抗原", "result": "<0.04", "unit": "IU/mL", "reference": "<0.10", "flag": "正常", "source": "截图可见内容"}, {"date": "2023-11-22", "report": "乙肝两对半定量", "category": "感染筛查", "item": "乙肝核心抗体", "result": "<0.20", "unit": "IU/mL", "reference": "<0.60", "flag": "正常", "source": "截图可见内容"}, {"date": "2023-11-22", "report": "乙肝两对半定量", "category": "感染筛查", "item": "乙肝表面抗体", "result": "<4.00", "unit": "mIU/mL", "reference": "<10.00", "flag": "正常", "source": "截图可见内容"}, {"date": "2023-11-22", "report": "乙肝两对半定量", "category": "感染筛查", "item": "乙肝表面抗原", "result": "<0.03", "unit": "IU/mL", "reference": "<0.05", "flag": "正常", "source": "截图可见内容"}, {"date": "2023-11-22", "report": "梅毒血清二项检测", "category": "感染筛查", "item": "梅毒甲苯胺红不加热血清试验", "result": "阴性", "unit": "", "reference": "阴性", "flag": "正常", "source": "截图可见内容"}, {"date": "2023-11-22", "report": "梅毒血清二项检测", "category": "感染筛查", "item": "梅毒螺旋体抗体检测", "result": "<1:80", "unit": "", "reference": "<1:80", "flag": "偏高", "source": "截图可见内容"}, {"date": "2023-11-23", "report": "丙型肝炎抗体测定", "category": "感染筛查", "item": "丙肝抗体", "result": "阴性", "unit": "", "reference": "阴性", "flag": "正常", "source": "截图可见内容"}, {"date": "2023-11-24", "report": "孕早期唐氏筛查", "category": "妊娠相关", "item": "妊娠相关血浆蛋白A", "result": "3927", "unit": "mIU/L", "reference": ">0.43", "flag": "正常", "source": "截图可见内容"}, {"date": "2023-11-24", "report": "孕早期唐氏筛查", "category": "妊娠相关", "item": "孕周计算方法", "result": "B超", "unit": "", "reference": "", "flag": "未判定", "source": "截图可见内容"}, {"date": "2023-11-24", "report": "孕早期唐氏筛查", "category": "妊娠相关", "item": "游离β-hCG", "result": "22.1", "unit": "IU/L", "reference": "", "flag": "未判定", "source": "截图可见内容"}, {"date": "2023-12-08", "report": "孕中期唐氏综合征筛查", "category": "妊娠相关", "item": "人绒毛膜促性腺激素", "result": "53011", "unit": "mIU/mL", "reference": "", "flag": "未判定", "source": "截图可见内容"}, {"date": "2023-12-08", "report": "孕中期唐氏综合征筛查", "category": "妊娠相关", "item": "甲胎蛋白", "result": "21.45", "unit": "ng/mL", "reference": "", "flag": "未判定", "source": "截图可见内容"}, {"date": "2023-12-08", "report": "孕中期唐氏综合征筛查", "category": "妊娠相关", "item": "雌三醇", "result": "0.633", "unit": "ng/mL", "reference": "0.000-52.000", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-02-26", "report": "肺炎支原体血清学试验", "category": "感染筛查", "item": "肺炎支原体血清学试验", "result": "<1:40", "unit": "", "reference": "<1:40", "flag": "偏高", "source": "截图可见内容"}, {"date": "2024-02-26", "report": "降钙素原检测", "category": "炎症/感染", "item": "PCT", "result": "<0.05", "unit": "ng/mL", "reference": "<0.05", "flag": "偏高", "source": "截图可见内容"}, {"date": "2024-03-17", "report": "血浆D-二聚体测定", "category": "凝血/易栓", "item": "D-二聚体", "result": "718", "unit": "ng/ml FEU", "reference": "68-494", "flag": "偏高", "source": "截图可见内容"}, {"date": "2024-03-17", "report": "血B型钠尿肽前体", "category": "心血管", "item": "PRO-BNP", "result": "<10.00", "unit": "pg/mL", "reference": "<125慢性心衰排除", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-03-18", "report": "免疫八项", "category": "免疫", "item": "B-ZY", "result": "415.500", "unit": "mg/L", "reference": "105.000-395.000", "flag": "偏高", "source": "截图可见内容"}, {"date": "2024-03-18", "report": "免疫八项", "category": "免疫", "item": "β2-微球蛋白", "result": "1.02", "unit": "mg/L", "reference": "1.00-2.30", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-03-18", "report": "免疫八项", "category": "免疫", "item": "免疫球蛋白A", "result": "1.90", "unit": "g/L", "reference": "0.70-5.00", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-03-18", "report": "免疫八项", "category": "免疫", "item": "免疫球蛋白G", "result": "11.00", "unit": "g/L", "reference": "7.00-16.00", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-03-18", "report": "免疫八项", "category": "免疫", "item": "免疫球蛋白M", "result": "1.84", "unit": "g/L", "reference": "0.40-2.80", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-03-18", "report": "免疫八项", "category": "免疫", "item": "补体C3", "result": "1.11", "unit": "g/L", "reference": "0.90-1.80", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-03-18", "report": "免疫八项", "category": "免疫", "item": "补体C4", "result": "0.156", "unit": "g/L", "reference": "0.100-0.400", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-03-18", "report": "免疫八项", "category": "免疫", "item": "铜蓝蛋白", "result": "0.53", "unit": "g/L", "reference": "0.22-0.58", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-03-18", "report": "尿干化学分析", "category": "尿检", "item": "pH值", "result": "7.0", "unit": "", "reference": "4.5-8.0", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-03-18", "report": "尿干化学分析", "category": "尿检", "item": "尿比重", "result": "1.010", "unit": "", "reference": "1.005-1.035", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-03-18", "report": "尿干化学分析", "category": "尿检", "item": "尿白细胞试验", "result": "微量", "unit": "", "reference": "阴性", "flag": "异常", "source": "截图可见内容"}, {"date": "2024-03-18", "report": "尿干化学分析", "category": "尿检", "item": "镜检白细胞", "result": "0-2", "unit": "/HP", "reference": "0-5", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-03-18", "report": "尿干化学分析", "category": "尿检", "item": "镜检红细胞", "result": "未见", "unit": "/HP", "reference": "0-3", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-03-18", "report": "甲功三项", "category": "甲状腺", "item": "促甲状腺激素", "result": "0.71", "unit": "uIU/mL", "reference": "0.56-5.91", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-03-18", "report": "甲功三项", "category": "甲状腺", "item": "游离三碘甲状原氨酸", "result": "4.56", "unit": "pmol/L", "reference": "3.53-7.37", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-03-18", "report": "甲功三项", "category": "甲状腺", "item": "游离甲状腺素", "result": "9.63", "unit": "pmol/L", "reference": "7.98-16.02", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-03-18", "report": "抗甲状腺自身抗体", "category": "甲状腺", "item": "甲状腺球蛋白抗体", "result": "12.40", "unit": "IU/mL", "reference": "0.00-115.00", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-03-18", "report": "抗甲状腺自身抗体", "category": "甲状腺", "item": "甲状腺过氧化物酶抗体", "result": "12.30", "unit": "IU/mL", "reference": "0.00-34.00", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-03-19", "report": "易栓症四项", "category": "凝血/易栓", "item": "抗凝血酶", "result": "109", "unit": "%", "reference": "80-120", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-03-19", "report": "易栓症四项", "category": "凝血/易栓", "item": "蛋白C活性", "result": "110", "unit": "%", "reference": "70-130", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-03-19", "report": "易栓症四项", "category": "凝血/易栓", "item": "蛋白S活性", "result": "35", "unit": "%", "reference": "55-140", "flag": "偏低", "source": "截图可见内容"}, {"date": "2024-03-19", "report": "易栓症四项", "category": "凝血/易栓", "item": "血管性血友病因子", "result": "148", "unit": "%", "reference": "50-160", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-03-19", "report": "血管炎五项", "category": "血管炎/自身免疫", "item": "cANCA效价", "result": "1:10", "unit": "", "reference": "", "flag": "未判定", "source": "截图可见内容"}, {"date": "2024-03-19", "report": "血管炎五项", "category": "血管炎/自身免疫", "item": "pANCA", "result": "阳性(+)", "unit": "", "reference": "阴性(-)", "flag": "异常", "source": "截图可见内容"}, {"date": "2024-03-19", "report": "血管炎五项", "category": "血管炎/自身免疫", "item": "抗肾小球基底膜抗体IgG", "result": "阴性(-)", "unit": "", "reference": "阴性(-)", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-03-19", "report": "血管炎五项", "category": "血管炎/自身免疫", "item": "抗蛋白酶3抗体IgG", "result": "阳性(+)", "unit": "", "reference": "阴性(-)", "flag": "异常", "source": "截图可见内容"}, {"date": "2024-03-19", "report": "血管炎五项", "category": "血管炎/自身免疫", "item": "抗髓过氧化物酶抗体IgG", "result": "阴性(-)", "unit": "", "reference": "阴性(-)", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-03-21", "report": "血浆D-二聚体测定", "category": "凝血/易栓", "item": "D-二聚体", "result": "851", "unit": "ng/ml FEU", "reference": "68-494", "flag": "偏高", "source": "截图可见内容"}, {"date": "2024-03-21", "report": "血气分析", "category": "血气/血常规", "item": "一氧化碳血红蛋白", "result": "1.3", "unit": "%", "reference": "0.0-0.8", "flag": "偏高", "source": "截图可见内容"}, {"date": "2024-03-21", "report": "血气分析", "category": "血气/血常规", "item": "二氧化碳分压", "result": "33.5", "unit": "mmHg", "reference": "35.0-48.0", "flag": "偏低", "source": "截图可见内容"}, {"date": "2024-03-21", "report": "血气分析", "category": "血气/血常规", "item": "实际碱剩余", "result": "-4.3", "unit": "mmol/L", "reference": "-3.2-3.5", "flag": "偏低", "source": "截图可见内容"}, {"date": "2024-03-21", "report": "血气分析", "category": "血气/血常规", "item": "标准碱剩余", "result": "-4.5", "unit": "mmol/L", "reference": "-2.3-3.0", "flag": "偏低", "source": "截图可见内容"}, {"date": "2024-03-21", "report": "血气分析", "category": "血气/血常规", "item": "标准碳酸氢根浓度", "result": "20.9", "unit": "mmol/L", "reference": "21.3-24.8", "flag": "偏低", "source": "截图可见内容"}, {"date": "2024-03-21", "report": "血气分析", "category": "血气/血常规", "item": "氧分压", "result": "110.5", "unit": "mmHg", "reference": "83.0-108.0", "flag": "偏高", "source": "截图可见内容"}, {"date": "2024-03-21", "report": "血气分析", "category": "血气/血常规", "item": "血红蛋白浓度", "result": "93", "unit": "g/L", "reference": "135-175", "flag": "偏低", "source": "截图可见内容"}, {"date": "2024-03-21", "report": "血管炎三项", "category": "血管炎/自身免疫", "item": "抗肾小球基底膜抗体", "result": "<0.5", "unit": "U/mL", "reference": "0.00-20.00", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-03-21", "report": "血管炎三项", "category": "血管炎/自身免疫", "item": "蛋白酶3抗体", "result": "186.99", "unit": "mg/L", "reference": "0.00-2.00", "flag": "偏高", "source": "截图可见内容"}, {"date": "2024-03-21", "report": "血管炎三项", "category": "血管炎/自身免疫", "item": "髓过氧化物酶抗体", "result": "<0.2", "unit": "mg/L", "reference": "0.00-1.50", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-03-22", "report": "狼疮样抗凝物质筛查", "category": "凝血/易栓", "item": "LA1/LA2", "result": "1.06", "unit": "", "reference": "0.80-1.20", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-03-22", "report": "狼疮样抗凝物质筛查", "category": "凝血/易栓", "item": "LA1凝固法", "result": "38.8", "unit": "秒", "reference": "31.0-44.0", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-03-22", "report": "狼疮样抗凝物质筛查", "category": "凝血/易栓", "item": "LA2凝固法", "result": "36.5", "unit": "秒", "reference": "30.0-38.0", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-03-26", "report": "涎液化糖链抗原", "category": "肺部/肿瘤标志物", "item": "KL-6", "result": "243", "unit": "U/mL", "reference": "≤500", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-03-26", "report": "肺肿瘤六项", "category": "肺部/肿瘤标志物", "item": "癌胚抗原", "result": "1.59", "unit": "ng/mL", "reference": "0.00-5.00", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-03-26", "report": "肺肿瘤六项", "category": "肺部/肿瘤标志物", "item": "神经元特异性烯醇化酶", "result": "8.97", "unit": "ng/mL", "reference": "0.00-16.30", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-03-26", "report": "肺肿瘤六项", "category": "肺部/肿瘤标志物", "item": "糖类抗原125", "result": "23.10", "unit": "U/mL", "reference": "0.00-47.00", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-03-26", "report": "肺肿瘤六项", "category": "肺部/肿瘤标志物", "item": "糖类抗原153", "result": "10.20", "unit": "U/mL", "reference": "0.00-24.00", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-03-26", "report": "肺肿瘤六项", "category": "肺部/肿瘤标志物", "item": "细胞角蛋白19片段", "result": "1.80", "unit": "ng/mL", "reference": "0.00-3.30", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-03-26", "report": "肺肿瘤六项", "category": "肺部/肿瘤标志物", "item": "鳞状上皮细胞癌抗原", "result": "0.80", "unit": "ng/mL", "reference": "0.00-1.50", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-03-29", "report": "自身免疫性肌炎抗体谱检测", "category": "血管炎/自身免疫", "item": "Jo-1/EJ/HMGCR/Ku/MDA5/Mi-2/NXP2/OJ/PL等抗体", "result": "全部阴性(-)", "unit": "", "reference": "阴性(-)", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-04-07", "report": "红细胞沉降率测定", "category": "炎症/感染", "item": "血沉", "result": "24", "unit": "mm/h", "reference": "0-20", "flag": "偏高", "source": "截图可见内容"}, {"date": "2024-04-07", "report": "血管炎三项", "category": "血管炎/自身免疫", "item": "抗肾小球基底膜抗体", "result": "<0.5", "unit": "U/mL", "reference": "0.00-20.00", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-04-07", "report": "血管炎三项", "category": "血管炎/自身免疫", "item": "蛋白酶3抗体", "result": "174.80", "unit": "mg/L", "reference": "0.00-2.00", "flag": "偏高", "source": "截图可见内容"}, {"date": "2024-04-07", "report": "血管炎三项", "category": "血管炎/自身免疫", "item": "髓过氧化物酶抗体", "result": "<0.2", "unit": "mg/L", "reference": "0.00-1.50", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-04-19", "report": "尿干化学分析", "category": "尿检", "item": "pH值", "result": "6.5", "unit": "", "reference": "4.5-8.0", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-04-19", "report": "尿干化学分析", "category": "尿检", "item": "尿比重", "result": "1.020", "unit": "", "reference": "1.005-1.035", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-04-19", "report": "尿干化学分析", "category": "尿检", "item": "尿白细胞试验", "result": "1+", "unit": "", "reference": "阴性", "flag": "异常", "source": "截图可见内容"}, {"date": "2024-05-20", "report": "免疫八项", "category": "免疫", "item": "B-ZY", "result": "392.300", "unit": "mg/L", "reference": "105.000-395.000", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-05-20", "report": "免疫八项", "category": "免疫", "item": "免疫球蛋白G", "result": "9.66", "unit": "g/L", "reference": "7.00-16.00", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-05-20", "report": "免疫八项", "category": "免疫", "item": "免疫球蛋白M", "result": "2.24", "unit": "g/L", "reference": "0.40-2.80", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-05-20", "report": "免疫八项", "category": "免疫", "item": "补体C3", "result": "1.13", "unit": "g/L", "reference": "0.90-1.80", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-05-20", "report": "免疫八项", "category": "免疫", "item": "补体C4", "result": "0.162", "unit": "g/L", "reference": "0.100-0.400", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-05-20", "report": "血浆D-二聚体测定", "category": "凝血/易栓", "item": "D-二聚体", "result": "1239", "unit": "ng/ml FEU", "reference": "68-494", "flag": "偏高", "source": "截图可见内容"}, {"date": "2024-05-20", "report": "甲胎蛋白", "category": "妊娠相关/肿瘤标志物", "item": "甲胎蛋白", "result": "296.00", "unit": "ng/mL", "reference": "≤7.00", "flag": "偏高", "source": "截图可见内容"}, {"date": "2024-05-20", "report": "肝功一组", "category": "肝功能", "item": "丙氨酸氨基转移酶", "result": "12.0", "unit": "U/L", "reference": "7.0-40.0", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-05-20", "report": "肝功一组", "category": "肝功能", "item": "天门冬氨酸氨基转移酶", "result": "21.8", "unit": "U/L", "reference": "13.0-35.0", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-05-20", "report": "肝功一组", "category": "肝功能", "item": "白蛋白", "result": "40.3", "unit": "g/L", "reference": "40.0-55.0", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-05-21", "report": "易栓症四项", "category": "凝血/易栓", "item": "抗凝血酶III活性", "result": "84", "unit": "%", "reference": "80-120", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-05-21", "report": "易栓症四项", "category": "凝血/易栓", "item": "蛋白C活性", "result": "84", "unit": "%", "reference": "70-130", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-05-21", "report": "易栓症四项", "category": "凝血/易栓", "item": "蛋白S活性", "result": "28", "unit": "%", "reference": "55-140", "flag": "偏低", "source": "截图可见内容"}, {"date": "2024-05-21", "report": "易栓症四项", "category": "凝血/易栓", "item": "血管性血友病因子抗原", "result": "224", "unit": "%", "reference": "50-160", "flag": "偏高", "source": "截图可见内容"}, {"date": "2024-05-21", "report": "降钙素原检查", "category": "炎症/感染", "item": "PCT", "result": "0.07", "unit": "ng/mL", "reference": "<0.05", "flag": "偏高", "source": "截图可见内容"}, {"date": "2024-05-21", "report": "血管炎三项", "category": "血管炎/自身免疫", "item": "抗肾小球基底膜抗体", "result": "0.67", "unit": "U/mL", "reference": "≤20.00", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-05-21", "report": "血管炎三项", "category": "血管炎/自身免疫", "item": "蛋白酶3抗体", "result": "158.07", "unit": "mg/L", "reference": "≤2.00", "flag": "偏高", "source": "截图可见内容"}, {"date": "2024-05-21", "report": "血管炎三项", "category": "血管炎/自身免疫", "item": "髓过氧化物酶抗体", "result": "<0.2", "unit": "mg/L", "reference": "≤1.50", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-05-22", "report": "狼疮样抗凝物质筛查", "category": "凝血/易栓", "item": "LA1/LA2", "result": "1.19", "unit": "", "reference": "0.80-1.20", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-05-22", "report": "狼疮样抗凝物质筛查", "category": "凝血/易栓", "item": "LA1凝固法", "result": "38.6", "unit": "秒", "reference": "31.0-44.0", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-05-22", "report": "狼疮样抗凝物质筛查", "category": "凝血/易栓", "item": "LA2凝固法", "result": "32.5", "unit": "秒", "reference": "30.0-38.0", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-05-23", "report": "致畸四项IgM抗体检测", "category": "感染筛查", "item": "巨细胞病毒IgM/单疱I、II型IgM/风疹IgM/弓形虫IgM", "result": "全部阴性", "unit": "", "reference": "阴性", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-05-24", "report": "降钙素原检查", "category": "炎症/感染", "item": "PCT", "result": "<0.05", "unit": "ng/mL", "reference": "<0.05", "flag": "偏高", "source": "截图可见内容"}, {"date": "2024-05-27", "report": "血管炎五项", "category": "血管炎/自身免疫", "item": "cANCA效价", "result": "1:10", "unit": "", "reference": "", "flag": "未判定", "source": "截图可见内容"}, {"date": "2024-05-27", "report": "血管炎五项", "category": "血管炎/自身免疫", "item": "pANCA", "result": "阳性(+)", "unit": "", "reference": "阴性(-)", "flag": "异常", "source": "截图可见内容"}, {"date": "2024-05-27", "report": "血管炎五项", "category": "血管炎/自身免疫", "item": "抗肾小球基底膜抗体IgG", "result": "阴性(-)", "unit": "", "reference": "阴性(-)", "flag": "正常", "source": "截图可见内容"}, {"date": "2024-05-27", "report": "血管炎五项", "category": "血管炎/自身免疫", "item": "抗蛋白酶3抗体IgG", "result": "阳性(+)", "unit": "", "reference": "阴性(-)", "flag": "异常", "source": "截图可见内容"}, {"date": "2024-05-27", "report": "血管炎五项", "category": "血管炎/自身免疫", "item": "抗髓过氧化物酶抗体IgG", "result": "阴性(-)", "unit": "", "reference": "阴性(-)", "flag": "正常", "source": "截图可见内容"}, {"date": "2025-02-25", "report": "胸部CT", "category": "影像", "item": "双肺多发小结节", "result": "影像提示：多发小结节，拟炎性结节，建议随诊复查", "unit": "", "reference": "", "flag": "未判定", "source": "截图可见内容"}, {"date": "2025-02-25", "report": "胸部CT", "category": "影像", "item": "脂肪肝", "result": "影像提示：脂肪肝", "unit": "", "reference": "", "flag": "未判定", "source": "截图可见内容"}, {"date": "2025-06-26", "report": "肝功能检验报告", "category": "肝功能", "item": "ALT", "result": "62", "unit": "U/L", "reference": "1-40", "flag": "偏高", "source": "PDF文字抽取"}, {"date": "2025-06-26", "report": "肝功能检验报告", "category": "肝功能", "item": "AST", "result": "27", "unit": "U/L", "reference": "1-37", "flag": "正常", "source": "PDF文字抽取"}, {"date": "2025-06-26", "report": "肝功能检验报告", "category": "肝功能", "item": "GGT", "result": "163", "unit": "U/L", "reference": "2-50", "flag": "偏高", "source": "PDF文字抽取"}, {"date": "2025-06-26", "report": "肝功能检验报告", "category": "肝功能", "item": "GLDH", "result": "14.4", "unit": "U/L", "reference": "0.1-7.5", "flag": "偏高", "source": "PDF文字抽取"}, {"date": "2025-06-26", "report": "肝功能检验报告", "category": "肝功能", "item": "LAP", "result": "127", "unit": "U/L", "reference": "30-70", "flag": "偏高", "source": "PDF文字抽取"}, {"date": "2025-06-26", "report": "肝功能检验报告", "category": "肝功能", "item": "总蛋白", "result": "72.0", "unit": "g/L", "reference": "64.0-87.0", "flag": "正常", "source": "PDF文字抽取"}, {"date": "2025-06-26", "report": "肝功能检验报告", "category": "肝功能", "item": "甘胆酸", "result": "2.6", "unit": "mg/L", "reference": "≤2.7", "flag": "正常", "source": "PDF文字抽取"}, {"date": "2025-06-26", "report": "肝功能检验报告", "category": "肝功能", "item": "白蛋白", "result": "43.3", "unit": "g/L", "reference": "35.0-50.0", "flag": "正常", "source": "PDF文字抽取"}, {"date": "2025-06-26", "report": "肝功能检验报告", "category": "肝功能", "item": "胆汁酸", "result": "7.1", "unit": "umol/L", "reference": "0.1-10.0", "flag": "正常", "source": "PDF文字抽取"}, {"date": "2025-08-19", "report": "肝酶学组合", "category": "肝功能", "item": "ALT", "result": "48", "unit": "U/L", "reference": "1-40", "flag": "偏高", "source": "PDF文字抽取"}, {"date": "2025-08-19", "report": "肝酶学组合", "category": "肝功能", "item": "AST", "result": "29", "unit": "U/L", "reference": "1-37", "flag": "正常", "source": "PDF文字抽取"}, {"date": "2025-08-19", "report": "肝酶学组合", "category": "肝功能", "item": "GGT", "result": "111", "unit": "U/L", "reference": "2-50", "flag": "偏高", "source": "PDF文字抽取"}, {"date": "2025-08-19", "report": "肝酶学组合", "category": "肝功能", "item": "GLDH", "result": "13.2", "unit": "U/L", "reference": "0.1-7.5", "flag": "偏高", "source": "PDF文字抽取"}, {"date": "2025-08-19", "report": "肝酶学组合", "category": "肝功能", "item": "LAP", "result": "98", "unit": "U/L", "reference": "30-70", "flag": "偏高", "source": "PDF文字抽取"}, {"date": "2026-06-10", "report": "尿沉渣定量检测,尿干化学检测", "category": "尿检/肾脏", "item": "pH(干化学)", "result": "5.0", "unit": "", "reference": "4.5-8.0", "flag": "正常", "source": "最新截图录入"}, {"date": "2026-06-10", "report": "尿沉渣定量检测,尿干化学检测", "category": "尿检/肾脏", "item": "尿亚硝酸盐(干化学)", "result": "阴性(-)", "unit": "", "reference": "阴性(-)", "flag": "正常", "source": "最新截图录入"}, {"date": "2026-06-10", "report": "尿沉渣定量检测,尿干化学检测", "category": "尿检/肾脏", "item": "尿粒细胞酯酶(干化学)", "result": "阳性(2+)", "unit": "", "reference": "阴性(-)", "flag": "异常", "source": "最新截图录入"}, {"date": "2026-06-10", "report": "尿沉渣定量检测,尿干化学检测", "category": "尿检/肾脏", "item": "尿糖(干化学)", "result": "阴性(-)", "unit": "", "reference": "阴性(-)", "flag": "正常", "source": "最新截图录入"}, {"date": "2026-06-10", "report": "尿沉渣定量检测,尿干化学检测", "category": "尿检/肾脏", "item": "尿胆原(干化学)", "result": "阴性(-)", "unit": "", "reference": "阴性(-)", "flag": "正常", "source": "最新截图录入"}, {"date": "2026-06-10", "report": "尿沉渣定量检测,尿干化学检测", "category": "尿检/肾脏", "item": "尿胆红素(干化学)", "result": "阴性(-)", "unit": "", "reference": "阴性(-)", "flag": "正常", "source": "最新截图录入"}, {"date": "2026-06-10", "report": "尿沉渣定量检测,尿干化学检测", "category": "尿检/肾脏", "item": "尿蛋白(干化学)", "result": "阴性(-)", "unit": "", "reference": "阴性(-)", "flag": "正常", "source": "最新截图录入"}, {"date": "2026-06-10", "report": "尿沉渣定量检测,尿干化学检测", "category": "尿检/肾脏", "item": "尿酮体(干化学)", "result": "阴性(-)", "unit": "", "reference": "阴性(-)", "flag": "正常", "source": "最新截图录入"}, {"date": "2026-06-10", "report": "尿沉渣定量检测,尿干化学检测", "category": "尿检/肾脏", "item": "尿隐血(干化学)", "result": "阳性(2+)", "unit": "", "reference": "阴性(-)", "flag": "异常", "source": "最新截图录入"}, {"date": "2026-06-10", "report": "尿沉渣定量检测,尿干化学检测", "category": "尿检/肾脏", "item": "比重(干化学)", "result": "1.027", "unit": "", "reference": "1.003-1.030", "flag": "正常", "source": "最新截图录入"}, {"date": "2026-06-10", "report": "尿沉渣定量检测,尿干化学检测", "category": "尿检/肾脏", "item": "浊度", "result": "清晰", "unit": "", "reference": "", "flag": "正常", "source": "最新截图录入"}, {"date": "2026-06-10", "report": "尿沉渣定量检测,尿干化学检测", "category": "尿检/肾脏", "item": "病理管型(图像)", "result": "0.0", "unit": "个/uL", "reference": "≤1.5", "flag": "正常", "source": "最新截图录入"}, {"date": "2026-06-10", "report": "尿沉渣定量检测,尿干化学检测", "category": "尿检/肾脏", "item": "白细胞(图像)", "result": "105", "unit": "个/uL", "reference": "≤12", "flag": "偏高", "source": "最新截图录入"}, {"date": "2026-06-10", "report": "尿沉渣定量检测,尿干化学检测", "category": "尿检/肾脏", "item": "红细胞(图像)", "result": "3", "unit": "个/uL", "reference": "<10", "flag": "正常", "source": "最新截图录入"}, {"date": "2026-06-10", "report": "尿沉渣定量检测,尿干化学检测", "category": "尿检/肾脏", "item": "细菌(图像)", "result": "319", "unit": "个/uL", "reference": "≤130", "flag": "偏高", "source": "最新截图录入"}, {"date": "2026-06-10", "report": "尿沉渣定量检测,尿干化学检测", "category": "尿检/肾脏", "item": "结晶(图像)", "result": "0", "unit": "个/uL", "reference": "≤6", "flag": "正常", "source": "最新截图录入"}, {"date": "2026-06-10", "report": "尿沉渣定量检测,尿干化学检测", "category": "尿检/肾脏", "item": "透明管型(图像)", "result": "0", "unit": "个/uL", "reference": "≤2", "flag": "正常", "source": "最新截图录入"}, {"date": "2026-06-10", "report": "尿沉渣定量检测,尿干化学检测", "category": "尿检/肾脏", "item": "非鳞状上皮细胞(图像)", "result": "3", "unit": "个/uL", "reference": "≤2", "flag": "偏高", "source": "最新截图录入"}, {"date": "2026-06-10", "report": "尿沉渣定量检测,尿干化学检测", "category": "尿检/肾脏", "item": "颜色", "result": "黄色", "unit": "", "reference": "", "flag": "正常", "source": "最新截图录入"}, {"date": "2026-06-10", "report": "尿沉渣定量检测,尿干化学检测", "category": "尿检/肾脏", "item": "鳞状上皮细胞(图像)", "result": "9", "unit": "个/uL", "reference": "≤5", "flag": "偏高", "source": "最新截图录入"}, {"date": "2026-06-10", "report": "尿沉渣定量检测,尿干化学检测", "category": "尿检/肾脏", "item": "黏液丝(图像)", "result": "719", "unit": "个/uL", "reference": "≤264", "flag": "偏高", "source": "最新截图录入"}];

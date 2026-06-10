@@ -343,6 +343,136 @@ def trend_svg(records: list[dict], item: str, title: str, unit: str = "") -> str
     """
 
 
+def numeric_points(records: list[dict], item: str) -> list[dict]:
+    points = []
+    for r in records:
+        if r["item"] != item:
+            continue
+        val = parse_number(r["result"])
+        if val is None:
+            continue
+        points.append(
+            {
+                "date": r["date"],
+                "value": val,
+                "result": r["result"],
+                "unit": r["unit"],
+                "reference": r["reference"],
+                "flag": r["flag"],
+            }
+        )
+    return sorted(points, key=lambda p: p["date"])
+
+
+def mini_sparkline(points: list[dict], color: str = "#2563eb") -> str:
+    if not points:
+        return '<div class="spark-empty">暂无可视化数据</div>'
+    if len(points) == 1:
+        return f"""
+        <svg class="spark" viewBox="0 0 260 78" role="img" aria-label="单次指标">
+          <line x1="18" y1="48" x2="242" y2="48" />
+          <circle cx="130" cy="48" r="5" style="stroke:{color}" />
+          <text x="130" y="70" text-anchor="middle">{escape(points[0]["date"])}</text>
+        </svg>
+        """
+
+    w, h, pad = 260, 78, 18
+    xs = [datetime.fromisoformat(p["date"]).toordinal() for p in points]
+    ys = [p["value"] for p in points]
+    minx, maxx = min(xs), max(xs)
+    miny, maxy = min(ys), max(ys)
+    if math.isclose(miny, maxy):
+        miny -= 1
+        maxy += 1
+    def sx(x: int) -> float:
+        return pad + (x - minx) / max(1, maxx - minx) * (w - 2 * pad)
+    def sy(y: float) -> float:
+        return h - pad - (y - miny) / (maxy - miny) * (h - 2 * pad)
+
+    coords = [(sx(x), sy(y), y, p["date"]) for x, y, p in zip(xs, ys, points)]
+    path = " ".join(("M" if i == 0 else "L") + f"{x:.1f},{y:.1f}" for i, (x, y, _, _) in enumerate(coords))
+    area = f"{path} L {coords[-1][0]:.1f},{h-pad:.1f} L {coords[0][0]:.1f},{h-pad:.1f} Z"
+    dots = "\n".join(
+        f'<circle cx="{x:.1f}" cy="{y:.1f}" r="3.5" style="stroke:{color}"><title>{escape(date)}: {val:g}</title></circle>'
+        for x, y, val, date in coords
+    )
+    return f"""
+    <svg class="spark" viewBox="0 0 {w} {h}" role="img" aria-label="指标起伏">
+      <path class="spark-area" d="{area}" style="fill:{color};" />
+      <path class="spark-line" d="{path}" style="stroke:{color};" />
+      {dots}
+      <text x="{pad}" y="72">{escape(points[0]["date"][2:])}</text>
+      <text x="{w-pad}" y="72" text-anchor="end">{escape(points[-1]["date"][2:])}</text>
+    </svg>
+    """
+
+
+def trend_card(records: list[dict], item: str, label: str, unit: str = "") -> str:
+    points = numeric_points(records, item)
+    if not points:
+        return ""
+    latest = points[-1]
+    previous = points[-2] if len(points) >= 2 else None
+    if previous:
+        delta = latest["value"] - previous["value"]
+        pct = delta / previous["value"] * 100 if previous["value"] else 0
+        if delta > 0:
+            trend = "较上次升高"
+            trend_class = "up"
+            arrow = "↑"
+        elif delta < 0:
+            trend = "较上次下降"
+            trend_class = "down"
+            arrow = "↓"
+        else:
+            trend = "较上次持平"
+            trend_class = "flat"
+            arrow = "→"
+        delta_text = f"{arrow} {abs(delta):g}{unit} / {abs(pct):.1f}%"
+        compare_text = f"{escape(previous['date'])} → {escape(latest['date'])}"
+    else:
+        trend = "仅一次记录"
+        trend_class = "flat"
+        delta_text = "等待后续复查"
+        compare_text = escape(latest["date"])
+
+    color = "#dc2626" if latest["flag"] in {"偏高", "偏低", "异常"} else "#059669"
+    return f"""
+    <article class="trend-card">
+      <div class="trend-head">
+        <div>
+          <span>{escape(label)}</span>
+          <strong>{escape(latest["result"])} {escape(latest["unit"] or unit)}</strong>
+        </div>
+        <em class="flag {status_class(latest["flag"])}">{escape(latest["flag"])}</em>
+      </div>
+      {mini_sparkline(points, color)}
+      <div class="trend-foot">
+        <b class="{trend_class}">{trend}：{escape(delta_text)}</b>
+        <small>{compare_text}；参考 {escape(latest["reference"] or "未提供")}</small>
+      </div>
+    </article>
+    """
+
+
+def trend_sentence(records: list[dict], item: str, label: str, unit: str = "") -> str:
+    points = numeric_points(records, item)
+    if not points:
+        return ""
+    first = points[0]
+    latest = points[-1]
+    if len(points) == 1:
+        return f"{label}：目前仅 {latest['date']} 一次结构化记录，结果 {latest['result']}{latest['unit'] or unit}，状态为{latest['flag']}。"
+    delta = latest["value"] - first["value"]
+    direction = "上升" if delta > 0 else "下降" if delta < 0 else "持平"
+    pct = abs(delta) / first["value"] * 100 if first["value"] else 0
+    return (
+        f"{label}：从 {first['date']} 的 {first['result']}{first['unit'] or unit} 到 "
+        f"{latest['date']} 的 {latest['result']}{latest['unit'] or unit}，整体{direction} {abs(delta):g}{unit}"
+        f"（约 {pct:.1f}%），最近状态为{latest['flag']}。"
+    )
+
+
 def status_class(flag: str) -> str:
     return {
         "正常": "ok",
@@ -379,6 +509,45 @@ def build_html(records: list[dict], files: list[dict]) -> str:
                 trend_svg(records, "尿白细胞试验", "尿白细胞试验趋势", ""),
             ],
         )
+    )
+    trend_cards = "\n".join(
+        filter(
+            None,
+            [
+                trend_card(records, "蛋白酶3抗体", "PR3 / 蛋白酶3抗体", " mg/L"),
+                trend_card(records, "D-二聚体", "D-二聚体", " ng/ml FEU"),
+                trend_card(records, "蛋白S活性", "蛋白S活性", "%"),
+                trend_card(records, "GGT", "GGT", " U/L"),
+                trend_card(records, "ALT", "ALT", " U/L"),
+                trend_card(records, "PCT", "降钙素原 PCT", " ng/mL"),
+                trend_card(records, "白细胞(图像)", "尿白细胞(图像)", " 个/uL"),
+                trend_card(records, "细菌(图像)", "尿细菌(图像)", " 个/uL"),
+            ],
+        )
+    )
+    analysis_sentences = [
+        trend_sentence(records, "蛋白酶3抗体", "PR3/蛋白酶3抗体", " mg/L"),
+        trend_sentence(records, "D-二聚体", "D-二聚体", " ng/ml FEU"),
+        trend_sentence(records, "蛋白S活性", "蛋白S活性", "%"),
+        trend_sentence(records, "GGT", "GGT", " U/L"),
+        trend_sentence(records, "ALT", "ALT", " U/L"),
+    ]
+    analysis_rows = "\n".join(
+        f"<li>{escape(s)}</li>" for s in analysis_sentences if s
+    )
+    latest_urine_summary = (
+        f"2026-06-10 尿检：共录入 {len(latest_records)} 条指标，其中 "
+        f"{len(latest_abnormal)} 条为异常/偏高；尿蛋白为阴性，尿隐血和尿粒细胞酯酶为阳性(2+)。"
+    )
+    flag_bars = "\n".join(
+        f"""
+        <div class="flag-bar">
+          <span>{escape(k)}</span>
+          <div><i class="{status_class(k)}" style="width:{v / max(1, len(records)) * 100:.1f}%"></i></div>
+          <b>{v}</b>
+        </div>
+        """
+        for k, v in flags.most_common()
     )
 
     category_rows = "\n".join(
@@ -477,6 +646,7 @@ def build_html(records: list[dict], files: list[dict]) -> str:
     .three {{ grid-template-columns: repeat(3, minmax(0, 1fr)); }}
     .charts {{ grid-template-columns: repeat(3, minmax(260px, 1fr)); }}
     .signals {{ grid-template-columns: repeat(3, minmax(0, 1fr)); }}
+    .trend-grid {{ grid-template-columns: repeat(4, minmax(0, 1fr)); }}
     .signal {{ padding: 14px; border-left-width: 4px; }}
     .signal span {{ display: inline-flex; border-radius: 999px; padding: 2px 8px; font-size: 12px; font-weight: 700; }}
     .signal strong {{ display: block; margin-top: 10px; }}
@@ -487,6 +657,33 @@ def build_html(records: list[dict], files: list[dict]) -> str:
     .pill {{ display: inline-flex; border-radius: 999px; padding: 4px 9px; background: var(--blue-soft); color: var(--blue); font-weight: 700; font-size: 12px; }}
     .callout {{ border: 1px dashed #93c5fd; background: #eff6ff; color: #1e3a8a; border-radius: 8px; padding: 12px 14px; }}
     .callout strong {{ display: block; margin-bottom: 3px; color: #1d4ed8; }}
+    .analysis-list {{ margin: 0; padding-left: 18px; color: var(--ink); }}
+    .analysis-list li {{ margin: 0 0 10px; color: #334155; }}
+    .flag-bars {{ display: grid; gap: 11px; }}
+    .flag-bar {{ display: grid; grid-template-columns: 58px 1fr 36px; gap: 10px; align-items: center; color: var(--muted); }}
+    .flag-bar div {{ height: 9px; background: #eef2f7; border-radius: 999px; overflow: hidden; }}
+    .flag-bar i {{ display: block; height: 100%; border-radius: inherit; min-width: 3px; }}
+    .flag-bar i.ok {{ background: var(--emerald); }}
+    .flag-bar i.high, .flag-bar i.low, .flag-bar i.abnormal {{ background: var(--red); }}
+    .flag-bar i.unknown {{ background: var(--amber); }}
+    .trend-card {{ background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; min-width: 0; }}
+    .trend-head {{ display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }}
+    .trend-head span {{ display: block; color: var(--muted); font-size: 12px; font-weight: 700; }}
+    .trend-head strong {{ display: block; margin-top: 4px; font-size: 20px; line-height: 1.15; }}
+    .trend-head em {{ font-style: normal; flex: 0 0 auto; }}
+    .spark {{ width: 100%; height: 78px; margin-top: 8px; }}
+    .spark line {{ stroke: var(--line); }}
+    .spark-area {{ opacity: .10; }}
+    .spark-line {{ fill: none; stroke-width: 3; }}
+    .spark circle {{ fill: #fff; stroke-width: 2; }}
+    .spark text {{ fill: var(--muted); font-size: 10px; }}
+    .spark-empty {{ margin-top: 10px; color: var(--muted); height: 78px; display: flex; align-items: center; }}
+    .trend-foot {{ border-top: 1px solid var(--line); padding-top: 10px; margin-top: 6px; display: grid; gap: 2px; }}
+    .trend-foot b {{ font-size: 12px; }}
+    .trend-foot small {{ color: var(--muted); }}
+    .trend-foot .up {{ color: var(--red); }}
+    .trend-foot .down {{ color: var(--emerald); }}
+    .trend-foot .flat {{ color: var(--amber); }}
     svg {{ width: 100%; height: auto; }}
     svg line {{ stroke: var(--line); }}
     svg path {{ fill: none; stroke: var(--blue); stroke-width: 3; }}
@@ -511,7 +708,7 @@ def build_html(records: list[dict], files: list[dict]) -> str:
     .bar-fill {{ height: 100%; background: linear-gradient(90deg, var(--blue), var(--emerald)); border-radius: inherit; }}
     .bar-fill.soft {{ background: linear-gradient(90deg, #93c5fd, #a7f3d0); }}
     footer {{ margin-top: 18px; padding: 16px 0 4px; color: var(--muted); }}
-    @media (max-width: 980px) {{ .shell {{ padding: 16px; }} .hero-top {{ flex-direction: column; }} .stamp {{ text-align: left; }} .kpis, .two, .three, .charts, .signals {{ grid-template-columns: 1fr; }} h1 {{ font-size: 24px; }} }}
+    @media (max-width: 980px) {{ .shell {{ padding: 16px; }} .hero-top {{ flex-direction: column; }} .stamp {{ text-align: left; }} .kpis, .two, .three, .charts, .signals, .trend-grid {{ grid-template-columns: 1fr; }} h1 {{ font-size: 24px; }} }}
   </style>
 </head>
 <body>
@@ -531,8 +728,10 @@ def build_html(records: list[dict], files: list[dict]) -> str:
       </div>
       <nav class="nav">
         <a href="#overview">总览</a>
+        <a href="#analysis">分析总结</a>
         <a href="#latest">最新报告</a>
         <a href="#signals">异常提醒</a>
+        <a href="#fluctuation">指标起伏</a>
         <a href="#trends">趋势图</a>
         <a href="#details">指标明细</a>
         <a href="#files">原始资料</a>
@@ -547,6 +746,29 @@ def build_html(records: list[dict], files: list[dict]) -> str:
       <div class="kpi"><span>随访时间范围</span><strong>{escape(dates[0])}</strong><small>至 {escape(dates[-1])}</small></div>
       <div class="kpi"><span>最新报告异常项</span><strong>{len(latest_abnormal)}</strong><small>{escape(latest_date)}</small></div>
     </div>
+
+    <section id="analysis" style="margin-top:16px;">
+      <div class="section-head">
+        <div>
+          <h2>随访分析总结</h2>
+          <p>根据已结构化数据自动生成，重点看方向、幅度和是否仍偏离参考范围。</p>
+        </div>
+        <span class="pill">自动汇总</span>
+      </div>
+      <div class="grid two">
+        <div class="callout">
+          <strong>关键变化</strong>
+          <ul class="analysis-list">
+            {analysis_rows}
+            <li>{escape(latest_urine_summary)}</li>
+          </ul>
+        </div>
+        <div>
+          <h3>指标状态分布</h3>
+          <div class="flag-bars">{flag_bars}</div>
+        </div>
+      </div>
+    </section>
 
     <section id="latest" style="margin-top:16px;">
       <div class="section-head">
@@ -585,6 +807,16 @@ def build_html(records: list[dict], files: list[dict]) -> str:
         {category_rows}
       </section>
     </div>
+
+    <section id="fluctuation" style="margin-top:16px;">
+      <div class="section-head">
+        <div>
+          <h2>关键指标起伏</h2>
+          <p>每张卡片显示最新值、较上次变化，以及已有记录的迷你趋势线。</p>
+        </div>
+      </div>
+      <div class="grid trend-grid">{trend_cards}</div>
+    </section>
 
     <section id="trends" style="margin-top:16px;">
       <div class="section-head">
