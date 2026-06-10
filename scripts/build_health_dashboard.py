@@ -473,6 +473,19 @@ def trend_sentence(records: list[dict], item: str, label: str, unit: str = "") -
     )
 
 
+def latest_record(records: list[dict], item: str) -> dict | None:
+    matches = [r for r in records if r["item"] == item]
+    if not matches:
+        return None
+    return sorted(matches, key=lambda r: r["date"])[-1]
+
+
+def value_text(record: dict | None) -> str:
+    if not record:
+        return "未录入"
+    return f"{record['result']}{(' ' + record['unit']) if record['unit'] else ''}"
+
+
 def status_class(flag: str) -> str:
     return {
         "正常": "ok",
@@ -539,6 +552,47 @@ def build_html(records: list[dict], files: list[dict]) -> str:
         f"2026-06-10 尿检：共录入 {len(latest_records)} 条指标，其中 "
         f"{len(latest_abnormal)} 条为异常/偏高；尿蛋白为阴性，尿隐血和尿粒细胞酯酶为阳性(2+)。"
     )
+    pr3 = latest_record(records, "蛋白酶3抗体")
+    d_dimer = latest_record(records, "D-二聚体")
+    protein_s = latest_record(records, "蛋白S活性")
+    urine_wbc = latest_record(records, "白细胞(图像)")
+    urine_bacteria = latest_record(records, "细菌(图像)")
+    urine_occult = latest_record(records, "尿隐血(干化学)")
+    urine_protein = latest_record(records, "尿蛋白(干化学)")
+    alt = latest_record(records, "ALT")
+    ggt = latest_record(records, "GGT")
+    clinical_cards = f"""
+      <article class="clinical-card active">
+        <div><span>病情活动线索</span><strong>PR3-ANCA 相关指标仍高</strong></div>
+        <p>PR3/蛋白酶3抗体最近一次为 {escape(value_text(pr3))}，较早期峰值已有下降，但仍明显高于参考范围；MPO、GBM 相关项目多次为阴性。</p>
+        <b>复诊重点：结合症状、ESR/CRP、尿检和器官受累评估是否仍有活动。</b>
+      </article>
+      <article class="clinical-card renal">
+        <div><span>肾脏/尿检线索</span><strong>尿路炎症与血尿信号需复核</strong></div>
+        <p>最新尿白细胞 {escape(value_text(urine_wbc))}、细菌 {escape(value_text(urine_bacteria))}、尿隐血 {escape(value_text(urine_occult))}；尿蛋白 {escape(value_text(urine_protein))}。</p>
+        <b>复诊重点：清洁中段尿复查、尿培养、尿沉渣红细胞形态、尿蛋白定量/尿ACR、肌酐/eGFR。</b>
+      </article>
+      <article class="clinical-card safety">
+        <div><span>用药安全/肝功能</span><strong>肝酶曾升高，后续需持续追踪</strong></div>
+        <p>ALT 最近一次 {escape(value_text(alt))}，GGT 最近一次 {escape(value_text(ggt))}；两者较上一份肝功能数据下降，但仍高于参考范围。</p>
+        <b>复诊重点：结合用药、乙肝/脂肪肝背景，定期复查肝功和胆汁淤积相关指标。</b>
+      </article>
+      <article class="clinical-card coag">
+        <div><span>凝血/血栓风险</span><strong>D-二聚体升高，蛋白S偏低</strong></div>
+        <p>D-二聚体最近一次 {escape(value_text(d_dimer))}，蛋白S活性最近一次 {escape(value_text(protein_s))}；需要结合妊娠/产后、炎症、血栓症状和抗凝治疗背景判断。</p>
+        <b>复诊重点：若有下肢肿痛、胸闷气促等症状，应及时就医，不仅依赖看板。</b>
+      </article>
+      <article class="clinical-card lung">
+        <div><span>肺部/影像</span><strong>既往胸部 CT 有随访提示</strong></div>
+        <p>2025-02-25 胸部 CT 记录“双肺多发小结节，拟炎性结节，建议随诊复查”，同时提示脂肪肝。</p>
+        <b>复诊重点：按影像科建议复查，结合咳嗽、咯血、气促和炎症指标判断。</b>
+      </article>
+      <article class="clinical-card missing">
+        <div><span>资料缺口</span><strong>关键肾功能与活动评分未完整结构化</strong></div>
+        <p>目前看板缺少连续肌酐/eGFR、尿蛋白定量、尿ACR、CRP/ESR、ANCA 定量复查和治疗方案时间线。</p>
+        <b>下一版建议：把用药、症状、复诊结论和实验室复查放到同一时间轴。</b>
+      </article>
+    """
     flag_bars = "\n".join(
         f"""
         <div class="flag-bar">
@@ -596,7 +650,7 @@ def build_html(records: list[dict], files: list[dict]) -> str:
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>AAV随访数据看板</title>
+  <title>风湿免疫科AAV随访分析看板</title>
   <style>
     :root {{
       --bg: #f8fafc;
@@ -647,6 +701,18 @@ def build_html(records: list[dict], files: list[dict]) -> str:
     .charts {{ grid-template-columns: repeat(3, minmax(260px, 1fr)); }}
     .signals {{ grid-template-columns: repeat(3, minmax(0, 1fr)); }}
     .trend-grid {{ grid-template-columns: repeat(4, minmax(0, 1fr)); }}
+    .clinical-grid {{ grid-template-columns: repeat(3, minmax(0, 1fr)); }}
+    .clinical-card {{ background: #fff; border: 1px solid var(--line); border-left: 4px solid var(--blue); border-radius: 8px; padding: 15px; min-height: 184px; display: flex; flex-direction: column; gap: 10px; }}
+    .clinical-card div span {{ display: block; color: var(--muted); font-size: 12px; font-weight: 750; }}
+    .clinical-card div strong {{ display: block; margin-top: 3px; font-size: 16px; }}
+    .clinical-card p {{ margin: 0; color: #334155; }}
+    .clinical-card b {{ display: block; margin-top: auto; color: #0f172a; font-size: 12px; line-height: 1.55; background: #f8fafc; border-radius: 6px; padding: 8px; }}
+    .clinical-card.active {{ border-left-color: var(--red); }}
+    .clinical-card.renal {{ border-left-color: var(--violet); }}
+    .clinical-card.safety {{ border-left-color: var(--amber); }}
+    .clinical-card.coag {{ border-left-color: #e11d48; }}
+    .clinical-card.lung {{ border-left-color: var(--blue); }}
+    .clinical-card.missing {{ border-left-color: var(--muted); }}
     .signal {{ padding: 14px; border-left-width: 4px; }}
     .signal span {{ display: inline-flex; border-radius: 999px; padding: 2px 8px; font-size: 12px; font-weight: 700; }}
     .signal strong {{ display: block; margin-top: 10px; }}
@@ -708,7 +774,7 @@ def build_html(records: list[dict], files: list[dict]) -> str:
     .bar-fill {{ height: 100%; background: linear-gradient(90deg, var(--blue), var(--emerald)); border-radius: inherit; }}
     .bar-fill.soft {{ background: linear-gradient(90deg, #93c5fd, #a7f3d0); }}
     footer {{ margin-top: 18px; padding: 16px 0 4px; color: var(--muted); }}
-    @media (max-width: 980px) {{ .shell {{ padding: 16px; }} .hero-top {{ flex-direction: column; }} .stamp {{ text-align: left; }} .kpis, .two, .three, .charts, .signals, .trend-grid {{ grid-template-columns: 1fr; }} h1 {{ font-size: 24px; }} }}
+    @media (max-width: 980px) {{ .shell {{ padding: 16px; }} .hero-top {{ flex-direction: column; }} .stamp {{ text-align: left; }} .kpis, .two, .three, .charts, .signals, .trend-grid, .clinical-grid {{ grid-template-columns: 1fr; }} h1 {{ font-size: 24px; }} }}
   </style>
 </head>
 <body>
@@ -716,9 +782,9 @@ def build_html(records: list[dict], files: list[dict]) -> str:
     <header class="hero">
       <div class="hero-top">
         <div>
-          <div class="eyebrow">AAV 随访资料 · 本地健康档案</div>
-          <h1>AAV随访数据看板</h1>
-          <div class="note">整合检查报告、趋势指标和原始文件索引。数据用于资料整理和复诊沟通，不能替代医生诊断或用药建议。</div>
+          <div class="eyebrow">风湿免疫科视角 · AAV 随访资料</div>
+          <h1>风湿免疫科AAV随访分析看板</h1>
+          <div class="note">按 ANCA 相关性血管炎随访思路组织资料：病情活动、肾脏尿检、感染线索、用药安全、凝血风险和影像随访。仅用于资料整理和复诊沟通，不能替代医生诊断或用药建议。</div>
         </div>
         <div class="stamp">
           <span>最新报告日期</span>
@@ -728,6 +794,7 @@ def build_html(records: list[dict], files: list[dict]) -> str:
       </div>
       <nav class="nav">
         <a href="#overview">总览</a>
+        <a href="#clinical">医生视角</a>
         <a href="#analysis">分析总结</a>
         <a href="#latest">最新报告</a>
         <a href="#signals">异常提醒</a>
@@ -746,6 +813,17 @@ def build_html(records: list[dict], files: list[dict]) -> str:
       <div class="kpi"><span>随访时间范围</span><strong>{escape(dates[0])}</strong><small>至 {escape(dates[-1])}</small></div>
       <div class="kpi"><span>最新报告异常项</span><strong>{len(latest_abnormal)}</strong><small>{escape(latest_date)}</small></div>
     </div>
+
+    <section id="clinical" style="margin-top:16px;">
+      <div class="section-head">
+        <div>
+          <h2>风湿免疫科医生视角</h2>
+          <p>把单项化验放回 AAV 随访框架中看：哪些支持活动，哪些提示感染或药物安全问题，哪些需要补资料。</p>
+        </div>
+        <span class="pill">临床问题导向</span>
+      </div>
+      <div class="grid clinical-grid">{clinical_cards}</div>
+    </section>
 
     <section id="analysis" style="margin-top:16px;">
       <div class="section-head">
